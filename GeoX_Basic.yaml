@@ -1,0 +1,160 @@
+# url 里填写自己的订阅,名称不能重复
+proxy-providers:
+  provider:
+    url: ""
+    type: http
+    interval: 86400
+    health-check: {enable: true,url: "https://www.gstatic.com/generate_204", interval: 300}
+
+mixed-port: 7890
+ipv6: true
+allow-lan: true
+unified-delay: false
+tcp-concurrent: true
+external-controller: 127.0.0.1:9090
+external-ui: ui
+external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+
+geodata-mode: true
+geox-url:
+  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat"
+  geosite: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb"
+  asn: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb"
+
+find-process-mode: strict
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
+tun:
+  enable: true
+  stack: mixed
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-filter:
+    - "+.lan"
+    - "+.local"
+    - "+.market.xiaomi.com"
+  default-nameserver:
+    - tls://223.5.5.5
+    - tls://223.6.6.6
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+proxy-groups:
+
+  - name: Proxy
+    type: select
+    proxies: [Auto-Select,DIRECT,Hong Kong,Taiwan,Japan,United States,Singapore,Manual]
+
+  - name: Match
+    type: select
+    proxies: [Proxy,DIRECT]
+
+  - name: Direct
+    type: select
+    proxies: [DIRECT,Proxy]
+
+  - name: Auto-Select
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 10
+
+  - name: Hong Kong
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 10
+    filter: "(?i)港|hk|hongkong|hong kong"
+
+  - name: Taiwan
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 10
+    filter: "(?i)台|tw|taiwan"
+
+  - name: Japan
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 10
+    filter: "(?i)日|jp|japan"
+
+  - name: United States
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    filter: "(?i)美|us|unitedstates|united states"
+
+  - name: Singapore
+    type: url-test
+    include-all: true
+    exclude-type: direct
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 10
+    filter: "(?i)(新|sg|singapore)"
+
+  - name: Manual
+    type: select
+    include-all: true
+    exclude-type: direct
+
+rules:
+  - GEOSITE,private,Direct
+  - GEOIP,lan,Direct,no-resolve
+  - GEOSITE,github,Proxy
+  - GEOSITE,twitter,Proxy
+  - GEOSITE,youtube,Proxy
+  - GEOSITE,google,Proxy
+  - GEOSITE,telegram,Proxy
+  - GEOSITE,netflix,Proxy
+  - GEOSITE,bilibili,Direct
+  - GEOSITE,bahamut,Proxy
+  - GEOSITE,spotify,Proxy
+  - GEOSITE,CN,Direct
+  - GEOIP,google,Proxy,no-resolve
+  - GEOIP,netflix,Proxy,no-resolve
+  - GEOIP,telegram,Proxy,no-resolve
+  - GEOIP,twitter,Proxy,no-resolve
+  - GEOIP,CN,Direct,no-resolve
+  - GEOSITE,geolocation-!cn,Match
+  - MATCH,Match
